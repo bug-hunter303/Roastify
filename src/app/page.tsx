@@ -419,7 +419,7 @@ export default function Home() {
         </a>
 
         
-        <p className="creator">
+        <p className="brand creator">
             Created by: c1asi
         </p>
         <span className="footer-copy">© 2026 ROASTIFY · NO JUDGMENT. OKAY, SOME.</span>
