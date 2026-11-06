@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 type Analytics = {
   totalWatched?: number;
@@ -9,8 +10,27 @@ type Analytics = {
   topChannels?: unknown[];
   topVideos?: unknown[];
   hourCounts?: unknown[] | Record<string, number>;
-  dateRange?: string;
+
+  dateRange?: {
+    first: string | null;
+    last: string | null;
+  };
+
+  aiRoast?: string;
 };
+
+const loadingMessages = [
+  "Scanning your questionable taste... 💀",
+  "Finding your 3 AM YouTube rabbit holes... 🌙",
+  "Calculating your brainrot percentage... 🧠",
+  "Your algorithm needs therapy... 😭",
+  "Investigating your suspicious subscriptions... 🔍",
+  "Counting how many times you ignored your responsibilities... 💀",
+  "Preparing emotional damage... 💔",
+  "Consulting the council of unemployed YouTube experts... 🫡",
+  "We need a moment. This history is concerning... 💀",
+  "Finalizing your public humiliation... 🔥",
+];
 
 function getText(item: unknown, keys: string[], fallback: string) {
   if (typeof item === "string") return item;
@@ -36,6 +56,7 @@ function getCount(item: unknown) {
 
     for (const key of ["count", "views", "watchCount", "total"]) {
       const value = Number(obj[key]);
+
       if (Number.isFinite(value)) return value;
     }
   }
@@ -48,13 +69,49 @@ function formatNumber(value = 0) {
 }
 
 export default function Home() {
+  // Refs
   const fileInput = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLElement>(null);
 
+  // Main state
   const [file, setFile] = useState<File | null>(null);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Loading and results flow
+  const [loading, setLoading] = useState(false);
+  const [readyToViewResults, setReadyToViewResults] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Rotate loading messages every 2.5 seconds.
+  useEffect(() => {
+    if (!loading) return;
+
+    const interval = window.setInterval(() => {
+      setLoadingMessageIndex((previous) =>
+        (previous + 1) % loadingMessages.length
+      );
+    }, 2500);
+
+    return () => window.clearInterval(interval);
+  }, [loading]);
+
+  // Scroll to results only after the user clicks the results button.
+  useEffect(() => {
+    if (!showResults) return;
+
+    const timeout = window.setTimeout(() => {
+      resultsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 150);
+
+    return () => window.clearTimeout(timeout);
+  }, [showResults]);
+
+  // Upload and process the YouTube history.
   async function handleUpload(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -63,9 +120,14 @@ export default function Home() {
       return;
     }
 
-    setLoading(true);
     setError("");
     setAnalytics(null);
+    setShowResults(false);
+    setReadyToViewResults(false);
+    setLoadingMessageIndex(0);
+    setLoading(true);
+
+    const startedAt = Date.now();
 
     try {
       const formData = new FormData();
@@ -82,18 +144,43 @@ export default function Home() {
         throw new Error(result.error || "Something went wrong.");
       }
 
-      setAnalytics(result.analytics ?? result);
+      // Keep loading visible for at least 30 seconds.
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(0, 30000 - elapsed);
+
+      if (remaining > 0) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, remaining);
+        });
+      }
+
+      // Save the returned analytics and AI roast.
+      setAnalytics({
+        ...(result.analytics ?? result),
+        aiRoast: result.roast ?? "",
+      });
+
+      // Replace loading with the results-ready button.
+      setLoading(false);
+      setReadyToViewResults(true);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
           : "Something went wrong. Try again."
       );
-    } finally {
+
       setLoading(false);
     }
   }
 
+  // Reveal results when the user clicks the button.
+  function handleViewResults() {
+    setReadyToViewResults(false);
+    setShowResults(true);
+  }
+
+  // Analytics data.
   const channels = analytics?.topChannels ?? [];
   const videos = analytics?.topVideos ?? [];
 
@@ -102,6 +189,7 @@ export default function Home() {
 
     if (Array.isArray(data)) {
       const item = data[index];
+
       return typeof item === "number" ? item : getCount(item);
     }
 
@@ -139,8 +227,13 @@ export default function Home() {
 
       {/* HERO */}
       <section className="hero">
-        <div className="hero-sticker sticker-left">100% JUDGMENT</div>
-        <div className="hero-sticker sticker-right">NO MERCY 💀</div>
+        <div className="hero-sticker sticker-left">
+          100% JUDGMENT
+        </div>
+
+        <div className="hero-sticker sticker-right">
+          NO MERCY 💀
+        </div>
 
         <div className="hero-eyebrow">
           <span className="eyebrow-dot" />
@@ -170,7 +263,7 @@ export default function Home() {
         <div className="hero-emoji">😭</div>
       </section>
 
-      {/* UPLOAD */}
+      {/* UPLOAD SECTION */}
       <section className="upload-section" id="upload">
         <div className="section-topline">
           <span>01 / THE EVIDENCE</span>
@@ -182,82 +275,163 @@ export default function Home() {
           <div className="upload-decoration upload-spark">✦</div>
 
           <div className="upload-content">
-            <div className="upload-emoji">📂</div>
 
-            <h2>
-              DROP THE
-              <br />
-              <span>RECEIPTS.</span>
-            </h2>
+            {/* STATE 1: FILE UPLOAD FORM */}
+            {!loading && !readyToViewResults && (
+              <>
+                <div className="upload-emoji">📂</div>
 
-            <p className="upload-description">
-              Upload your YouTube watch history and prepare
-              <br className="desktop-break" />
-              to question your life decisions.
-            </p>
+                <h2>
+                  DROP THE
+                  <br />
+                  <span>RECEIPTS.</span>
+                </h2>
 
-            <form onSubmit={handleUpload}>
-              <input
-                ref={fileInput}
-                type="file"
-                accept=".json,application/json"
-                className="hidden-input"
-                onChange={(e) => {
-                  setFile(e.target.files?.[0] ?? null);
-                  setError("");
-                  setAnalytics(null);
-                }}
-              />
+                <p className="upload-description">
+                  Upload your YouTube watch history and prepare
+                  <br className="desktop-break" />
+                  to question your life decisions.
+                </p>
 
-              <button
-                type="button"
-                className="choose-button"
-                onClick={() => fileInput.current?.click()}
-              >
-                {file ? "CHANGE FILE ↗" : "CHOOSE YOUR FILE ↗"}
-              </button>
+                <form onSubmit={handleUpload}>
+                  <input
+                    ref={fileInput}
+                    type="file"
+                    accept=".json,application/json"
+                    className="hidden-input"
+                    onChange={(e) => {
+                      setFile(e.target.files?.[0] ?? null);
+                      setError("");
+                      setAnalytics(null);
+                      setShowResults(false);
+                      setReadyToViewResults(false);
+                    }}
+                  />
 
-              <p className="takeout-help">
-                Don't have your data? Get it from{" "}
-                <a
-                  href="https://takeout.google.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    className="choose-button"
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    {file ? "CHANGE FILE ↗" : "CHOOSE YOUR FILE ↗"}
+                  </button>
+
+                  <p className="takeout-help">
+                    Don't have your data? Get it from{" "}
+                    <a
+                      href="https://takeout.google.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Google Takeout ↗
+                    </a>
+                  </p>
+
+                  <p className="file-hint">
+                    {file
+                      ? `SELECTED: ${file.name}`
+                      : "JSON FILE ONLY · YOUR WATCH HISTORY"}
+                  </p>
+
+                  {file && (
+                    <button
+                      type="submit"
+                      className="analyze-button"
+                    >
+                      ROAST MY HISTORY 💀
+                    </button>
+                  )}
+                </form>
+
+                {error && (
+                  <p className="error-message">
+                    {error}
+                  </p>
+                )}
+              </>
+            )}
+
+            {/* STATE 2: LOADING IN THE UPLOAD CARD */}
+            {loading && (
+              <div className="loading-card" aria-live="polite">
+                <div className="loading-sticker">
+                  UNDER INVESTIGATION
+                </div>
+
+                <div className="loading-skull">💀</div>
+
+                <p className="loading-kicker">
+                  ROASTIFY IS INVESTIGATING
+                </p>
+
+                <h2 className="loading-title">
+                  YOUR TASTE
+                  <br />
+                  IS ON TRIAL.
+                </h2>
+
+                <p
+                  className="loading-message"
+                  key={loadingMessageIndex}
                 >
-                  Google Takeout ↗
-                </a>
-              </p>
+                  {loadingMessages[loadingMessageIndex]}
+                </p>
 
-              <p className="file-hint">
-                {file
-                  ? `SELECTED: ${file.name}`
-                  : "JSON FILE ONLY · YOUR WATCH HISTORY"}
-              </p>
+                <div className="loading-progress">
+                  <div className="loading-progress-bar" />
+                </div>
 
-              {file && (
+                <p className="loading-footnote">
+                  PLEASE REMAIN HUMILIATED.
+                </p>
+              </div>
+            )}
+
+            {/* STATE 3: RESULTS READY */}
+            {readyToViewResults && (
+              <div className="results-ready">
+                <div className="loading-skull">🔥</div>
+
+                <p className="loading-kicker">
+                  THE INVESTIGATION IS COMPLETE
+                </p>
+
+                <h2>
+                  YOUR VERDICT
+                  <br />
+                  IS READY.
+                </h2>
+
+                <p>
+                  We've seen enough. Are you ready to face the consequences?
+                </p>
+
                 <button
-                  type="submit"
+                  type="button"
                   className="analyze-button"
-                  disabled={loading}
+                  onClick={handleViewResults}
                 >
-                  {loading ? "INVESTIGATING... 🔍" : "ROAST MY HISTORY 💀"}
+                  SEE MY RESULTS ↓
                 </button>
-              )}
-            </form>
+              </div>
+            )}
 
-            {error && <p className="error-message">{error}</p>}
           </div>
 
           <div className="upload-footer">
-            <span>YOUR DATA STAYS YOURS.</span>
+            <span>YOUR DATA IS USED TO GENERATE YOUR ROAST.</span>
             <span>WE'RE JUST HERE TO JUDGE.</span>
           </div>
         </div>
       </section>
 
-      {/* ANALYTICS */}
-      {analytics && (
-        <section className="results-section" id="results">
+      {/* RESULTS: HIDDEN UNTIL USER CLICKS SEE MY RESULTS */}
+      {analytics && showResults && (
+        <section
+          className="results-section"
+          id="results"
+          ref={resultsRef}
+        >
           <div className="section-topline">
             <span>02 / THE DAMAGE REPORT</span>
             <span>IT'S WORSE THAN WE THOUGHT</span>
@@ -269,32 +443,60 @@ export default function Home() {
               <br />
               <span>VERDICT.</span>
             </h2>
-            <div className="verdict-sticker">CERTIFIED<br />SUSPECT 💀</div>
+
+            <div className="verdict-sticker">
+              CERTIFIED
+              <br />
+              SUSPECT 💀
+            </div>
           </div>
 
+          {/* STATISTICS */}
           <div className="stats-grid">
             <div className="stat-card stat-purple">
               <span className="stat-label">VIDEOS WATCHED</span>
-              <strong>{formatNumber(analytics.totalWatched)}</strong>
-              <span className="stat-caption">touch grass maybe?</span>
+
+              <strong>
+                {formatNumber(analytics.totalWatched)}
+              </strong>
+
+              <span className="stat-caption">
+                touch grass maybe?
+              </span>
+
               <span className="stat-decoration">▶</span>
             </div>
 
             <div className="stat-card stat-lime">
               <span className="stat-label">CHANNELS VISITED</span>
-              <strong>{formatNumber(analytics.uniqueChannels)}</strong>
-              <span className="stat-caption">many personalities detected</span>
+
+              <strong>
+                {formatNumber(analytics.uniqueChannels)}
+              </strong>
+
+              <span className="stat-caption">
+                many personalities detected
+              </span>
+
               <span className="stat-decoration">✳</span>
             </div>
 
             <div className="stat-card stat-pink">
               <span className="stat-label">UNIQUE VIDEOS</span>
-              <strong>{formatNumber(analytics.uniqueVideos)}</strong>
-              <span className="stat-caption">the rabbit hole is real</span>
+
+              <strong>
+                {formatNumber(analytics.uniqueVideos)}
+              </strong>
+
+              <span className="stat-caption">
+                the rabbit hole is real
+              </span>
+
               <span className="stat-decoration">?</span>
             </div>
           </div>
 
+          {/* CHANNELS AND VIDEOS */}
           <div className="results-grid">
             <div className="result-card">
               <div className="result-card-heading">
@@ -309,6 +511,7 @@ export default function Home() {
                       <span className="rank-number">
                         0{index + 1}
                       </span>
+
                       <span className="rank-name">
                         {getText(
                           item,
@@ -316,6 +519,7 @@ export default function Home() {
                           "Unknown channel"
                         )}
                       </span>
+
                       <span className="rank-count">
                         {formatNumber(getCount(item))}
                       </span>
@@ -323,7 +527,9 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <p className="empty-state">No channel data found. 🤷</p>
+                <p className="empty-state">
+                  No channel data found. 🤷
+                </p>
               )}
             </div>
 
@@ -340,6 +546,7 @@ export default function Home() {
                       <span className="rank-number">
                         0{index + 1}
                       </span>
+
                       <span className="rank-name">
                         {getText(
                           item,
@@ -347,6 +554,7 @@ export default function Home() {
                           "Unknown video"
                         )}
                       </span>
+
                       <span className="rank-count">
                         {formatNumber(getCount(item))}×
                       </span>
@@ -354,7 +562,9 @@ export default function Home() {
                   ))}
                 </div>
               ) : (
-                <p className="empty-state">No repeat offenders found. 👀</p>
+                <p className="empty-state">
+                  No repeat offenders found. 👀
+                </p>
               )}
             </div>
           </div>
@@ -376,10 +586,14 @@ export default function Home() {
                   <div
                     className="chart-bar"
                     style={{
-                      height: `${Math.max((value / maxHour) * 100, 3)}%`,
+                      height: `${Math.max(
+                        (value / maxHour) * 100,
+                        3
+                      )}%`,
                     }}
                     title={`${index}:00 — ${value} views`}
                   />
+
                   {index % 3 === 0 && (
                     <span className="chart-label">
                       {String(index).padStart(2, "0")}
@@ -398,15 +612,44 @@ export default function Home() {
             </div>
           </div>
 
+          {/* AI ROAST */}
+          <div className="ai-roast-card">
+            <div className="ai-roast-heading">
+              <span>03 / THE AI HAS SPOKEN</span>
+              <span>🤖💀</span>
+            </div>
+
+            <h2>
+              YOUR PERSONAL
+              <br />
+              <span>ROAST.</span>
+            </h2>
+
+            <p className="ai-roast-text">
+              {analytics.aiRoast ||
+                "The AI couldn't prepare your roast. Even the algorithm needs a break. 💀"}
+            </p>
+
+            <div className="ai-roast-footer">
+              GENERATED BY AI · ZERO MERCY
+            </div>
+          </div>
+
+          {/* FINAL ROAST */}
           <div className="final-roast">
             <span>THE FINAL MESSAGE</span>
+
             <h2>
               MAYBE
               <br />
               <span>LOG OFF.</span>
             </h2>
+
             <div className="final-emoji">🫵😭</div>
-            <p>Respectfully, your algorithm knows too much.</p>
+
+            <p>
+              Respectfully, your algorithm knows too much.
+            </p>
           </div>
         </section>
       )}
@@ -418,11 +661,13 @@ export default function Home() {
           roastify<span className="brand-dot">.</span>
         </a>
 
-        
         <p className="brand creator">
-            Created by: c1asi
+          Created by: c1asi
         </p>
-        <span className="footer-copy">© 2026 ROASTIFY · NO JUDGMENT. OKAY, SOME.</span>
+
+        <span className="footer-copy">
+          © 2026 ROASTIFY · NO JUDGMENT. OKAY, SOME.
+        </span>
       </footer>
     </main>
   );

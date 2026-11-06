@@ -1,6 +1,9 @@
+
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
-
+/* ===================================
+   ROOT & RESET
+=================================== */
 
 :root {
   --purple: #281442;
@@ -21,6 +24,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 100px;
 }
 
 body {
@@ -43,12 +47,22 @@ button {
   cursor: pointer;
 }
 
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--purple-light);
+  outline-offset: 4px;
+}
+
+/* ===================================
+   MAIN LAYOUT
+=================================== */
+
 .site-shell {
   position: relative;
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
-  overflow: hidden;
+  overflow-x: clip;
   padding: 0 7%;
 }
 
@@ -83,16 +97,24 @@ button {
   transform: rotate(15deg);
 }
 
-/* NAVBAR */
+/* ===================================
+   NAVBAR
+=================================== */
 
 .navbar {
-  position: relative;
-  z-index: 2;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  min-height: 82px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  min-height: 90px;
-  border-bottom: 1px solid rgba(40, 20, 66, 0.15);
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 0;
+  background: rgba(233, 225, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .brand {
@@ -102,6 +124,7 @@ button {
   font-size: 25px;
   font-weight: 700;
   letter-spacing: -1.5px;
+  white-space: nowrap;
 }
 
 .brand-icon {
@@ -125,6 +148,7 @@ button {
   font-family: "DM Mono", monospace;
   font-size: 10px;
   letter-spacing: 1px;
+  text-align: center;
 }
 
 .nav-dot {
@@ -141,6 +165,7 @@ button {
   font-weight: 700;
   letter-spacing: 0.5px;
   transition: 0.2s ease;
+  white-space: nowrap;
 }
 
 .nav-button:hover {
@@ -153,7 +178,9 @@ button {
   margin-left: 8px;
 }
 
-/* HERO */
+/* ===================================
+   HERO
+=================================== */
 
 .hero {
   position: relative;
@@ -222,6 +249,7 @@ button {
   font-weight: 700;
   box-shadow: 5px 5px 0 var(--purple);
   transition: 0.2s ease;
+  white-space: nowrap;
 }
 
 .hero-cta:hover {
@@ -266,7 +294,9 @@ button {
   transform: rotate(9deg);
 }
 
-/* COMMON SECTION STYLES */
+/* ===================================
+   COMMON SECTION STYLES
+=================================== */
 
 .upload-section,
 .results-section {
@@ -287,7 +317,9 @@ button {
   letter-spacing: 0.8px;
 }
 
-/* UPLOAD */
+/* ===================================
+   UPLOAD CARD
+=================================== */
 
 .upload-card {
   position: relative;
@@ -405,6 +437,7 @@ button {
   z-index: 1;
   display: flex;
   justify-content: space-between;
+  gap: 15px;
   padding: 18px 25px;
   background: rgba(255, 255, 255, 0.06);
   color: #b7a9c8;
@@ -433,7 +466,104 @@ button {
   font-size: 110px;
 }
 
-/* RESULTS */
+/* ===================================
+   LOADING SCREEN INSIDE UPLOAD CARD
+=================================== */
+
+.loading-card,
+.results-ready {
+  width: 100%;
+  min-height: 390px;
+  padding: 45px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.loading-sticker {
+  display: inline-block;
+  background: var(--lime);
+  color: var(--purple);
+  padding: 9px 16px;
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  transform: rotate(-4deg);
+}
+
+.loading-skull {
+  font-size: 65px;
+  animation: skullBounce 1s infinite alternate ease-in-out;
+}
+
+.loading-kicker {
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--lime);
+  font-weight: 700;
+}
+
+.loading-title,
+.results-ready h2 {
+  font-size: clamp(28px, 5vw, 45px);
+  line-height: 1.05;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.loading-message {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(14px, 3vw, 18px);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--lime);
+  animation: messageFade 0.4s ease;
+}
+
+.loading-progress {
+  width: min(100%, 350px);
+  height: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid var(--lime);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.loading-progress-bar {
+  height: 100%;
+  width: 40%;
+  background: var(--lime);
+  animation: loadingMove 1.5s infinite ease-in-out;
+}
+
+.loading-footnote {
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  color: #b9adc8;
+  letter-spacing: 1px;
+}
+
+.results-ready h2 {
+  color: var(--white);
+}
+
+.results-ready p {
+  color: #c9bdd8;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* ===================================
+   RESULTS HEADING
+=================================== */
 
 .results-section {
   padding-top: 50px;
@@ -443,6 +573,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
   margin: 45px 0;
 }
 
@@ -469,7 +600,9 @@ button {
   box-shadow: 4px 4px 0 var(--purple);
 }
 
-/* STAT CARDS */
+/* ===================================
+   STAT CARDS
+=================================== */
 
 .stats-grid {
   display: grid;
@@ -531,7 +664,9 @@ button {
   transform: rotate(-15deg);
 }
 
-/* RESULT LISTS */
+/* ===================================
+   RESULT LISTS
+=================================== */
 
 .results-grid {
   display: grid;
@@ -607,7 +742,9 @@ button {
   font-size: 13px;
 }
 
-/* ACTIVITY CHART */
+/* ===================================
+   ACTIVITY CHART
+=================================== */
 
 .activity-card {
   margin-top: 20px;
@@ -669,7 +806,66 @@ button {
   margin-top: 12px;
 }
 
-/* FINAL ROAST */
+/* ===================================
+   AI ROAST CARD
+=================================== */
+
+.ai-roast-card {
+  position: relative;
+  margin-top: 35px;
+  padding: 35px;
+  color: var(--white);
+  background: var(--purple);
+  border: 2px solid var(--purple);
+  border-radius: 20px;
+  box-shadow: 7px 7px 0 var(--lime);
+}
+
+.ai-roast-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  color: var(--lime);
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.ai-roast-card h2 {
+  margin: 30px 0 20px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(35px, 6vw, 55px);
+  line-height: 0.95;
+  letter-spacing: -2px;
+}
+
+.ai-roast-card h2 span {
+  color: var(--lime);
+}
+
+.ai-roast-text {
+  color: var(--white);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+  line-height: 1.9;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.ai-roast-footer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--lime);
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+/* ===================================
+   FINAL ROAST
+=================================== */
 
 .final-roast {
   position: relative;
@@ -712,7 +908,9 @@ button {
   transform: rotate(15deg);
 }
 
-/* FOOTER */
+/* ===================================
+   FOOTER
+=================================== */
 
 .footer {
   position: relative;
@@ -742,6 +940,7 @@ button {
   font-size: 9px;
   letter-spacing: 0.5px;
 }
+
 .creator {
   margin: 0;
   padding: 0;
@@ -755,11 +954,16 @@ button {
 
 .footer-copy {
   justify-self: end;
+  text-align: right;
 }
-/* ANIMATIONS */
+
+/* ===================================
+   ANIMATIONS
+=================================== */
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(0);
   }
 
@@ -768,7 +972,41 @@ button {
   }
 }
 
-/* TABLET */
+@keyframes skullBounce {
+  from {
+    transform: translateY(0) rotate(-10deg);
+  }
+
+  to {
+    transform: translateY(-12px) rotate(10deg);
+  }
+}
+
+@keyframes messageFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loadingMove {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+/* ===================================
+   TABLET RESPONSIVE
+=================================== */
 
 @media (max-width: 850px) {
   .site-shell {
@@ -804,7 +1042,9 @@ button {
   }
 }
 
-/* MOBILE */
+/* ===================================
+   MOBILE RESPONSIVE
+=================================== */
 
 @media (max-width: 600px) {
   .site-shell {
@@ -813,6 +1053,7 @@ button {
 
   .navbar {
     min-height: 70px;
+    gap: 10px;
   }
 
   .brand {
@@ -924,6 +1165,26 @@ button {
     font-size: 7px;
   }
 
+  .loading-card,
+  .results-ready {
+    min-height: 390px;
+    padding: 35px 12px;
+  }
+
+  .loading-title,
+  .results-ready h2 {
+    font-size: 36px;
+    letter-spacing: -2px;
+  }
+
+  .loading-message {
+    font-size: 12px;
+  }
+
+  .loading-sticker {
+    font-size: 9px;
+  }
+
   .results-heading h2 {
     font-size: 65px;
     letter-spacing: -4px;
@@ -984,11 +1245,25 @@ button {
     font-size: 40px;
   }
 
+  .ai-roast-card {
+    padding: 25px 20px;
+  }
+
+  .ai-roast-text {
+    font-size: 14px;
+  }
+
   .footer {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    justify-items: center;
     text-align: center;
+    gap: 18px;
     padding: 30px 0;
   }
 
-  
+  .creator,
+  .footer-copy {
+    justify-self: center;
+    text-align: center;
+  }
 }
