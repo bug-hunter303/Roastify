@@ -2,14 +2,9 @@
 
 **Your Spotify taste deserves to be roasted.**
 
-Roastify analyzes your Spotify listening taste and delivers hilarious roasts based on your music preferences.
+Roastify analyzes your Youtube videos taste and delivers hilarious roasts based on your music preferences.
 
-## ✨ Features
 
-- 🎵 Spotify integration
-- 🔥 Personalized music taste roasts
-- 🎨 Dark-themed UI
-- ⚡ Fast and responsive interface
 
 ## 🛠️ Built With
 
