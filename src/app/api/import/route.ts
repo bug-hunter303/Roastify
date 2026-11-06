@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import {
   parseYouTubeHistory,
   generateAnalytics,
-} from "../../../lib/youtube.ts";
+} from "../../../lib/youtube";
 
 export const runtime = "nodejs";
 
